@@ -11,7 +11,7 @@ and Research Students - Software Developer Alex Simko, Pemba Sherpa (F24), and N
 """
 
 from fastapi import HTTPException, Depends, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials 
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 import os
 import argparse
@@ -19,6 +19,7 @@ import secrets
 
 # Initialize the HTTP Bearer scheme for token authentication
 bearer_scheme = HTTPBearer()
+
 
 def parse_arguments():
     """
@@ -37,13 +38,17 @@ def parse_arguments():
     - ``WHISPER_MODEL``: The name of the Whisper model to be used. Default: ``"medium"``.
     """
 
-
     # Define default values from environment variables
-    host = os.getenv("WHISPER_HOST", "127.0.0.1")  # Retrieve the host from the environment, defaulting to "0.0.0.0"
-    port = int(os.getenv("WHISPER_PORT", 2224))  # Retrieve the port from the environment, defaulting to 2224, and convert to integer
-    whispermodel = os.getenv("WHISPER_MODEL", "medium")  # Retrieve the model name from the environment, defaulting to "medium"
-    
-    return {"host": host, "port": port, "whispermodel": whispermodel}  # Return the parsed configuration as a dictionary
+    # Retrieve the host from the environment, defaulting to "0.0.0.0"
+    host = os.getenv("WHISPER_HOST", "127.0.0.1")
+    # Retrieve the port from the environment, defaulting to 2224, and convert to integer
+    port = int(os.getenv("WHISPER_PORT", 2224))
+    # Retrieve the model name from the environment, defaulting to "medium"
+    whispermodel = os.getenv("WHISPER_MODEL", "medium")
+
+    # Return the parsed configuration as a dictionary
+    return {"host": host, "port": port, "whispermodel": whispermodel}
+
 
 def generate_api_key():
     """
@@ -65,6 +70,7 @@ def generate_api_key():
     """
 
     return secrets.token_urlsafe(32)
+
 
 def get_api_key(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> str:
     """
@@ -101,6 +107,7 @@ def get_api_key(credentials: HTTPAuthorizationCredentials = Depends(bearer_schem
         detail="Invalid or missing Bearer Token",
     )
 
+
 def check_api_key():
     """
     Checks and retrieves the API key from the environment variables.
@@ -125,8 +132,9 @@ def check_api_key():
         # If not found, generate a new one and every session
         api_key = generate_api_key()
         os.environ['SESSION_API_KEY'] = api_key
-    
+
     return api_key
+
 
 def get_ip_from_headers(request: Request):
     """
