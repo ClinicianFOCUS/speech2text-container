@@ -11,7 +11,7 @@
   OutFile "DockerComposeInstaller.exe"
 
   ;Default installation folder
-  InstallDir "$PROGRAMFILES\DockerCompose"
+  InstallDir "$PROGRAMFILES\TOOLKITFORFOCUS"
 
   ;Get installation folder from registry if available
   InstallDirRegKey HKCU "Software\DockerCompose" ""
@@ -49,6 +49,36 @@ Section "Install Local-LLM-Container" Section1
 
     ; Check for docker and docker compose
     Call CheckForDocker
+
+    ; Create the installation directory
+    CreateDirectory "$INSTDIR"
+
+    ; Create dir the cont directory
+    CreateDirectory "$INSTDIR\llm-cont"
+
+    SetOutPath "$INSTDIR\llm-cont"    ; Set the output directory to the installation folder
+
+    File '.\assets\License.txt'
+
+    ; Use PowerShell to download the ZIP file from GitHub
+    inetc::get "http://github.com/ClinicianFOCUS/local-llm-container/archive/refs/heads/main.zip" "$INSTDIR\llm-cont\repo.zip"
+
+    ; Check if the download was successful
+    IfFileExists $INSTDIR\llm-cont\repo.zip +2
+    MessageBox MB_OK "Download failed!:: $0"
+
+    ; Unzip the downloaded file using PowerShell
+    ;ExecWait '"powershell" -Command "Expand-Archive -Path $INSTDIR\local-llm\repo.zip -DestinationPath $INSTDIR\local-llm\local-llm-container"'
+
+    ExecShell "open" 'powershell' '-NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Path \"$INSTDIR\llm-cont\repo.zip\" -DestinationPath \"$INSTDIR\llm-cont\local-llm-container\""' SW_HIDE
+
+    ; Remove the zip file after extraction
+    ExecWait '"powershell" -Command "Remove-Item $INSTDIR\llm-cont\repo.zip"'
+
+    Goto done
+
+
+    done:
 
 SectionEnd
 LangString DESC_Section1 ${LANG_ENGLISH} "Turnkey local llm container to support other activities and tools we are developing. This will host your own LLM with accesible API."
