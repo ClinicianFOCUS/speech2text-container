@@ -47,6 +47,9 @@
 ; ----------- LLM SECTION-----------------
 Section "Install Local-LLM-Container" Section1
 
+    ; Check for docker and docker compose
+    Call CheckForDocker
+
 SectionEnd
 LangString DESC_Section1 ${LANG_ENGLISH} "Turnkey local llm container to support other activities and tools we are developing. This will host your own LLM with accesible API."
 
@@ -99,3 +102,30 @@ Section "Uninstall"
   DeleteRegKey /ifempty HKCU "Software\DockerCompose"
 
 SectionEnd
+
+
+; --------- UTIL FUNCTIONS -----------
+Function CheckForDocker
+    ; Run the Docker Compose version command
+    nsExec::ExecToStack 'docker-compose --version'
+    Pop $0  ; exit code of command
+    Pop $1  ; command output
+    
+    ; Check if Docker Compose is installed
+    StrCmp $0 "0" 0 +3
+        Goto Done
+
+    ;Check if docker is installed
+    nsExec::ExecToStack 'docker --version'
+
+    Pop $0  ; exit code of command
+    Pop $1  ; command output
+    StrCmp $0 "0" 0 +3
+        Goto Done
+
+    ; If Docker Compose is not installed, display an error and abort the installation
+    MessageBox MB_OK "Docker Compose is not installed. Please install it before continuing. Canceling Install..."
+    Abort
+
+    Done:
+FunctionEnd
