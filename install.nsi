@@ -106,26 +106,34 @@ SectionEnd
 
 ; --------- UTIL FUNCTIONS -----------
 Function CheckForDocker
+
     ; Run the Docker Compose version command
     nsExec::ExecToStack 'docker-compose --version'
     Pop $0  ; exit code of command
     Pop $1  ; command output
-    
+
     ; Check if Docker Compose is installed
-    StrCmp $0 "0" 0 +3
-        Goto Done
+    StrCmp $0 "0" +3 0
+        ; If not installed, display an error and abort
+        MessageBox MB_OK "Docker Compose is not installed. Please install it before continuing. Canceling Install..."
+        Abort
 
-    ;Check if docker is installed
+    ; If installed, continue
+    Goto CheckDocker
+
+CheckDocker:
+    ; Check if Docker is installed
     nsExec::ExecToStack 'docker --version'
-
     Pop $0  ; exit code of command
     Pop $1  ; command output
-    StrCmp $0 "0" 0 +3
-        Goto Done
+    
+    StrCmp $0 "0" +3 0
+        ; If Docker is not installed, display an error and abort
+        MessageBox MB_OK "Docker is not installed. Please install it before continuing. Canceling Install..."
+        Abort
 
-    ; If Docker Compose is not installed, display an error and abort the installation
-    MessageBox MB_OK "Docker Compose is not installed. Please install it before continuing. Canceling Install..."
-    Abort
+    ; If both Docker and Docker Compose are installed, continue with the installation
+    Goto Done
 
-    Done:
+Done:
 FunctionEnd
