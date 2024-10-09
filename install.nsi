@@ -44,12 +44,14 @@ Section "Docker Compose" SecDockerCompose
 
   SetOutPath "$INSTDIR"
 
-  ; Download and install Docker Compose
-  inetc::get "https://github.com/docker/compose/releases/latest/download/docker-compose-Windows-x86_64.exe" "$INSTDIR\docker-compose.exe"
-  Pop $0
-  StrCmp $0 "OK" +3
-    MessageBox MB_OK "Failed to download Docker Compose: $0"
-    Abort
+  ; Check if Docker Compose is already installed
+  IfFileExists "$INSTDIR\docker-compose.exe" +4 0
+    ; Download and install Docker Compose
+    inetc::get "https://github.com/docker/compose/releases/latest/download/docker-compose-Windows-x86_64.exe" "$INSTDIR\docker-compose.exe"
+    Pop $0
+    StrCmp $0 "OK" +3
+      MessageBox MB_OK "Failed to download Docker Compose: $0"
+      Abort
 
   ; Copy docker-compose.yml from the repository
   File "docker-compose.yml"
