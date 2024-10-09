@@ -16,6 +16,10 @@
   ;Get installation folder from registry if available
   InstallDirRegKey HKCU "Software\DockerCompose" ""
 
+
+; Define the logo image
+!define MUI_ICON ./assets/logo.ico
+
 ;--------------------------------
 ;Interface Settings
 
@@ -24,7 +28,7 @@
 ;--------------------------------
 ;Pages
 
-  !insertmacro MUI_PAGE_LICENSE "${NSISDIR}\Docs\Modern UI\License.txt"
+  !insertmacro MUI_PAGE_LICENSE ".\assets\License.txt"
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
@@ -40,26 +44,31 @@
 ;--------------------------------
 ;Installer Sections
 
-Section "Docker Compose" SecDockerCompose
-
-  SetOutPath "$INSTDIR"
-
-  ; Check if Docker Compose is already installed
-  IfFileExists "$INSTDIR\docker-compose.exe" +4 0
-    ; Download and install Docker Compose
-    inetc::get "https://github.com/docker/compose/releases/latest/download/docker-compose-Windows-x86_64.exe" "$INSTDIR\docker-compose.exe"
-    Pop $0
-    StrCmp $0 "OK" +3
-      MessageBox MB_OK "Failed to download Docker Compose: $0"
-      Abort
-
-  ; Copy docker-compose.yml from the repository
-  File "docker-compose.yml"
-
-  ; Run Docker Compose
-  ExecWait '"$INSTDIR\docker-compose.exe" -f "$INSTDIR\docker-compose.yml" up -d'
+; ----------- LLM SECTION-----------------
+Section "Install Local-LLM-Container" Section1
 
 SectionEnd
+LangString DESC_Section1 ${LANG_ENGLISH} "Turnkey local llm container to support other activities and tools we are developing. This will host your own LLM with accesible API."
+
+;------------ LLM SECTION END -------------
+
+
+;---------------- Speech2Text Section--------------------
+
+Section "Install Speech2Text-Container" Section2
+
+SectionEnd
+LangString DESC_Section2 ${LANG_ENGLISH} "Containerized solution for AI speech-to-text that can run locally. This runs a whisper server with accessible API."
+;---------------- Speech2Text Section End ----------------
+
+
+;---------- FreeScribe Section ----------------------
+Section "Install Freescribe Client" Section3
+
+SectionEnd
+LangString DESC_Section3 ${LANG_ENGLISH} "A medical scribe capable of creating SOAP notes running Whisper and Kobold based on conversation with a patient"
+;---------- FreeScribe Section End ------------------
+
 
 ;--------------------------------
 ;Descriptions
@@ -69,7 +78,9 @@ SectionEnd
 
   ;Assign language strings to sections
   !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecDockerCompose} $(DESC_SecDockerCompose)
+      !insertmacro MUI_DESCRIPTION_TEXT ${Section1} $(DESC_Section1)
+      !insertmacro MUI_DESCRIPTION_TEXT ${Section2} $(DESC_Section2)
+      !insertmacro MUI_DESCRIPTION_TEXT ${Section3} $(DESC_Section3)
   !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 ;--------------------------------
