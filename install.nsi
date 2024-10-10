@@ -4,6 +4,7 @@
   !include "MUI2.nsh"
 
 Var SectionIndex
+Var ComboBoxHandle ; To hold the handle of the drop-down
 
 ;--------------------------------
 ;General
@@ -177,6 +178,8 @@ FunctionEnd
 # Function to create the custom page
 Function CustomPage
 
+  !insertmacro MUI_HEADER_TEXT "LLM Container Settings" "Please enter all settings below for a successful installation."
+
   ; Check if the module is selected
   SectionGetFlags ${Section1} $SectionIndex
   IntOp $SectionIndex $SectionIndex & ${SF_SELECTED}  ; Check if the section is selected
@@ -189,18 +192,28 @@ Function CustomPage
   nsDialogs::Create 1018
   Pop $0
 
-  # Define the label for the text box
-  ;${NSD_CreateLabel} 10u 10u 100% 12u "Enter the model name you wish to use"
-  ;Pop $1
+  ; Create a label for the drop-down box
+  ${NSD_CreateLabel} 10u 10u 60% 12u "Select a model to use:"
+  Pop $0
 
-    # Define the label for the text box
+  ; Create the drop-down box (combobox)
+  ${NSD_CreateComboBox} 10u 25u 40% 12u ""
+  Pop $ComboBoxHandle
+
+  ; Add items to the drop-down
+  ${NSD_CB_AddString} $ComboBoxHandle "google/gemma-2-2b-it"
+  ${NSD_CB_AddString} $ComboBoxHandle "Custom"
+
+  ; select the first item
+  ${NSD_CB_SelectString} $ComboBoxHandle "google/gemma-2-2b-it"
+
+
+  # Define the label for the hugging face token box
   ${NSD_CreateLabel} 10u 55u 100% 12u "Enter your hugging face token"
   Pop $1
 
-
   # Create the text input box
-  ;${NSD_CreateText} 10u 30u 80% 12u ""
-  ${NSD_CreateText} 10u 75u 80% 12u ""
+  ${NSD_CreateText} 10u 75u 65% 12u ""
   Pop $2
 
   # Set a variable to hold the user's input
@@ -209,6 +222,11 @@ FunctionEnd
 
 # Function to retrieve the user input from the text box
 Function GetTextInput
+
+  ${NSD_GetText} $ComboBoxHandle $0  # $0 will hold the user input
+  StrCmp $0 "Custom" 0 +2
+  MessageBox MB_OK "Please read the documentation for custom model use. This is for advanced users only."
+
   ${NSD_GetText} $2 $0  # $0 will hold the user input
-  MessageBox MB_OK "You entered: $0"
+  
 FunctionEnd
