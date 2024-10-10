@@ -73,12 +73,12 @@ Section "Install Local-LLM-Container" Section1
     ExecShell "open" 'powershell' '-NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Path \"$INSTDIR\llm-cont\repo.zip\" -DestinationPath \"$INSTDIR\llm-cont\local-llm-container\""' SW_HIDE
 
     ; Remove the zip file after extraction
-    ExecWait '"powershell" -Command "Remove-Item $INSTDIR\llm-cont\repo.zip"'
+    ExecShell "open" 'powershell' '-NoProfile -ExecutionPolicy Bypass -Command "Remove-Item $INSTDIR\llm-cont\repo.zip"' SW_HIDE
 
     Goto done
-
-
     done:
+    nsExec::ExecToLog 'docker-compose -f "C:\Program Files (x86)\TOOLKITFORFOCUS\llm-cont\local-llm-container\local-llm-container-main\docker-compose.yml" up -d --build'
+
 
 SectionEnd
 LangString DESC_Section1 ${LANG_ENGLISH} "Turnkey local llm container to support other activities and tools we are developing. This will host your own LLM with accesible API."
