@@ -3,6 +3,8 @@
 
   !include "MUI2.nsh"
 
+Var SectionIndex
+
 ;--------------------------------
 ;General
 
@@ -30,6 +32,8 @@
 
   !insertmacro MUI_PAGE_LICENSE ".\assets\License.txt"
   !insertmacro MUI_PAGE_COMPONENTS
+  # Create the custom page
+  Page custom CustomPage GetTextInput
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
 
@@ -166,4 +170,45 @@ CheckDocker:
     Goto Done
 
 Done:
+FunctionEnd
+
+!include "nsDialogs.nsh"
+
+# Function to create the custom page
+Function CustomPage
+
+  ; Check if the module is selected
+  SectionGetFlags ${Section1} $SectionIndex
+  IntOp $SectionIndex $SectionIndex & ${SF_SELECTED}  ; Check if the section is selected
+  
+  ; If the module is not selected, skip this page
+  ${If} $SectionIndex == 0
+    Abort
+  ${EndIf}
+
+  nsDialogs::Create 1018
+  Pop $0
+
+  # Define the label for the text box
+  ;${NSD_CreateLabel} 10u 10u 100% 12u "Enter the model name you wish to use"
+  ;Pop $1
+
+    # Define the label for the text box
+  ${NSD_CreateLabel} 10u 55u 100% 12u "Enter your hugging face token"
+  Pop $1
+
+
+  # Create the text input box
+  ;${NSD_CreateText} 10u 30u 80% 12u ""
+  ${NSD_CreateText} 10u 75u 80% 12u ""
+  Pop $2
+
+  # Set a variable to hold the user's input
+  nsDialogs::Show
+FunctionEnd
+
+# Function to retrieve the user input from the text box
+Function GetTextInput
+  ${NSD_GetText} $2 $0  # $0 will hold the user input
+  MessageBox MB_OK "You entered: $0"
 FunctionEnd
