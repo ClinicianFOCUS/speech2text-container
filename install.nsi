@@ -51,7 +51,6 @@ Var ComboBoxHandle ; To hold the handle of the drop-down
 
 ; ----------- LLM SECTION-----------------
 Section "Install Local-LLM-Container" Section1
-
     ; Check for docker and docker compose
     Call CheckForDocker
 
@@ -227,6 +226,18 @@ Function GetTextInput
   StrCmp $0 "Custom" 0 +2
   MessageBox MB_OK "Please read the documentation for custom model use. This is for advanced users only."
 
-  ${NSD_GetText} $2 $0  # $0 will hold the user input
+  ${NSD_GetText} $2 $2  # $0 will hold the user input
+
+    ; Define the PowerShell command that captures and explicitly outputs the response code
+    StrCpy $0 'powershell -NoProfile -ExecutionPolicy Bypass -Command "$response = Invoke-WebRequest -Uri \"https://huggingface.co/api/whoami-v2\" -Headers @{Authorization = \"Bearer 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\"} -ErrorAction Stop; Write-Output $response.StatusCode; $response.Content"'
+
+    ; Execute the PowerShell command and capture output (status code)
+    nsExec::ExecToLog $0
+
+    ; Retrieve the output (response code)
+    Pop $1
+
+    ; Display the HTTP response code to the user
+    MessageBox MB_OK "HTTP Response Code: $1"
   
 FunctionEnd
