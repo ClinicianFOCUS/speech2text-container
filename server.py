@@ -11,7 +11,8 @@ and Research Students - Software Developer Alex Simko, Pemba Sherpa (F24), and N
 """
 
 from torch._C import NoneType
-from fastapi import FastAPI, File, UploadFile, HTTPException, Security, Request
+from fastapi import FastAPI, File, UploadFile, HTTPException, Security, Request, WebSocket
+from starlette.websockets import WebSocketDisconnect
 from dotenv import load_dotenv
 from utils import check_api_key, get_api_key, parse_arguments, get_ip_from_headers
 from slowapi import Limiter
@@ -30,6 +31,8 @@ import logging
 import io
 import librosa
 from pydub import AudioSegment
+import numpy as np
+import asyncio
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -191,7 +194,6 @@ async def transcribe_audio(
         )  # Assuming 'model' can handle file-like objects
         response_data = {"text": result["text"]}
     except Exception as e:
-        logging.error(f"Error processing audio file: {e}")
         raise HTTPException(
             status_code=500, detail=f"Error processing audio file: {e}"
         ) from e
@@ -235,3 +237,56 @@ async def startup_event():
     # Print the API key for reference
     print(
         f"Use this API key for requests with bearer header: {SESSION_API_KEY}")
+
+
+# Add these constants
+CHUNK = 1024
+RATE = 16000
+SILENCE_THRESHOLD = 0.01
+MIN_AUDIO_LENGTH = 5  # seconds
+SILENCE_LENGTH = 1  # seconds
+
+# Add this function to check for silence
+def is_silent(data, threshold=SILENCE_THRESHOLD):
+    return np.max(np.abs(data)) < threshold
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    
+    buffer = []
+    silent_chunks = 0
+    
+    try:
+        while True:
+            data = await websocket.receive_bytes()
+            audio_chunk = np.frombuffer(data, dtype=np.float32)
+            
+            buffer.extend(audio_chunk)
+            
+            if is_silent(audio_chunk):
+                silent_chunks += 1
+            else:
+                silent_chunks = 0
+            
+            buffer_duration = len(buffer) / RATE
+            silence_duration = silent_chunks * CHUNK / RATE
+            
+            if buffer_duration >= MIN_AUDIO_LENGTH and silence_duration >= SILENCE_LENGTH:
+                # Process the buffer
+                audio_data = np.array(buffer)
+                result = MODEL.transcribe(audio_data)
+                transcribed_text = result["text"]
+                
+                # Send the transcribed text back to the client
+                await websocket.send_text(transcribed_text)
+                
+                # Clear the buffer
+                buffer = []
+                silent_chunks = 0
+            
+            # Optionally, you can add a small delay to prevent overwhelming the server
+            await asyncio.sleep(0.01)
+    
+    except WebSocketDisconnect:
+        logging.info("WebSocket disconnected")
