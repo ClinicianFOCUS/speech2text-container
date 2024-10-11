@@ -29,6 +29,7 @@ import logging
 import logging
 import io
 import librosa
+from pydub import AudioSegment
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -120,13 +121,13 @@ async def transcribe_audio(
     """
     Transcribes an uploaded audio file using the Whisper model.
 
-    This endpoint accepts an audio file (MP3 or WAV) and an API key for authentication.
+    This endpoint accepts an audio file (MP3, WAV, or WebM) and an API key for authentication.
     It validates the file type, saves the file temporarily, transcribes it using the
     Whisper model, and returns the transcribed text.
 
     :param request: The request object containing headers and client information.
     :type request: fastapi.Request
-    :param file: The audio file to be transcribed. Must be an MP3 or WAV file.
+    :param file: The audio file to be transcribed. Must be an MP3, WAV, or WebM file.
     :type file: fastapi.UploadFile
     :param api_key: The API key for authentication. Retrieved using the `get_api_key` function.
     :type api_key: str
@@ -135,7 +136,7 @@ async def transcribe_audio(
     :rtype: dict
 
     :raises HTTPException:
-        - 400: If the uploaded file is not an MP3 or WAV file.
+        - 400: If the uploaded file is not an MP3, WAV, or WebM file.
         - 500: If there is an error processing the audio file.
 
     **Example:**
@@ -164,20 +165,25 @@ async def transcribe_audio(
     file_content = await file.read()  # Assuming 'file' is a File object from an upload
     file_type = mime.from_buffer(file_content)
 
-    if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav"]:
+    if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav", "video/webm"]:
         logging.warning(f"Invalid file type: {file_type}")
         raise HTTPException(
             status_code=400,
-            detail="Invalid file type. Please upload an MP3 or WAV file.",
+            detail="Invalid file type. Please upload an MP3, WAV, or WebM file.",
         )
 
     try:
-        # Use BytesIO to create an in-memory buffer for the audio file
         audio_buffer = io.BytesIO(file_content)
 
-        audio_data, sample_rate = librosa.load(
-            audio_buffer, sr=None
-        )  # sr=None to keep the original sample rate
+        if file_type == "video/webm":
+            # Convert WebM to WAV
+            audio = AudioSegment.from_file(audio_buffer, format="webm")
+            wav_buffer = io.BytesIO()
+            audio.export(wav_buffer, format="wav")
+            wav_buffer.seek(0)
+            audio_data, sample_rate = librosa.load(wav_buffer, sr=None)
+        else:
+            audio_data, sample_rate = librosa.load(audio_buffer, sr=None)
 
         # Process the file with Whisper using the in-memory buffer
         result = MODEL.transcribe(
