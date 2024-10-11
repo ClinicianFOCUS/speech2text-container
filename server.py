@@ -54,6 +54,11 @@ logging.basicConfig(
 # Setup the whispermodel var and api key var
 MODEL = None
 SESSION_API_KEY = None
+CHUNK = 1024
+RATE = 16000
+SILENCE_THRESHOLD = 0.01
+MIN_AUDIO_LENGTH = 5  # seconds
+SILENCE_LENGTH = 1  # seconds
 
 # Configure logging to display INFO level messages
 logging.basicConfig(level=logging.INFO)
@@ -200,52 +205,6 @@ async def transcribe_audio(
 
     return response_data
 
-
-# Main entry point for running the Whisper servers
-
-
-@app.on_event("startup")
-async def startup_event():
-    """
-    Asynchronous function that runs during the application startup.
-
-    This function performs several initialization tasks:
-    1. Parses the command-line arguments to retrieve configuration settings.
-    2. Loads the Whisper model using the specified model name.
-    3. Checks and retrieves the API key for authentication.
-    4. Prints the API key for reference.
-
-    The function uses the global variable `MODEL` to store the loaded Whisper model.
-
-    The function uses the global variable `SESSION_API_KEY` to store the API key.
-
-    Returns:
-    - None
-    """
-
-    # Parse command-line arguments
-    args = parse_arguments()
-
-    # Load the Whisper model using the specified model name
-    global MODEL
-    MODEL = whisper.load_model("tiny.en")
-
-    # Check and retrieve the API key\
-    global SESSION_API_KEY
-    SESSION_API_KEY = check_api_key()
-
-    # Print the API key for reference
-    print(
-        f"Use this API key for requests with bearer header: {SESSION_API_KEY}")
-
-
-# Add these constants
-CHUNK = 1024
-RATE = 16000
-SILENCE_THRESHOLD = 0.01
-MIN_AUDIO_LENGTH = 5  # seconds
-SILENCE_LENGTH = 1  # seconds
-
 # Add this function to check for silence
 def is_silent(data, threshold=SILENCE_THRESHOLD):
     return np.max(np.abs(data)) < threshold
@@ -290,3 +249,42 @@ async def websocket_endpoint(websocket: WebSocket):
     
     except WebSocketDisconnect:
         logging.info("WebSocket disconnected")
+
+
+
+# Main entry point for running the Whisper servers
+
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Asynchronous function that runs during the application startup.
+
+    This function performs several initialization tasks:
+    1. Parses the command-line arguments to retrieve configuration settings.
+    2. Loads the Whisper model using the specified model name.
+    3. Checks and retrieves the API key for authentication.
+    4. Prints the API key for reference.
+
+    The function uses the global variable `MODEL` to store the loaded Whisper model.
+
+    The function uses the global variable `SESSION_API_KEY` to store the API key.
+
+    Returns:
+    - None
+    """
+
+    # Parse command-line arguments
+    args = parse_arguments()
+
+    # Load the Whisper model using the specified model name
+    global MODEL
+    MODEL = whisper.load_model("tiny.en")
+
+    # Check and retrieve the API key\
+    global SESSION_API_KEY
+    SESSION_API_KEY = check_api_key()
+
+    # Print the API key for reference
+    print(
+        f"Use this API key for requests with bearer header: {SESSION_API_KEY}")
