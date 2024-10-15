@@ -33,6 +33,7 @@ import librosa
 from pydub import AudioSegment
 import numpy as np
 import asyncio
+import base64
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -218,15 +219,15 @@ async def websocket_endpoint(websocket: WebSocket):
     
     try:
         while True:
-            data = await websocket.receive_bytes()
-            audio_chunk = np.frombuffer(data, dtype=np.float32)
+            data = await websocket.receive_text()  # Receive base64 encoded audio data
+            audio_chunk = np.frombuffer(base64.b64decode(data), dtype=np.float32)
             
             buffer.extend(audio_chunk)
             
-            if is_silent(audio_chunk):
-                silent_chunks += 1
-            else:
-                silent_chunks = 0
+            # if is_silent(audio_chunk):
+            #     silent_chunks += 1
+            # else:
+            #     silent_chunks = 0
             
             buffer_duration = len(buffer) / RATE
             silence_duration = silent_chunks * CHUNK / RATE
