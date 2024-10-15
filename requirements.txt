@@ -9,3 +9,4 @@ python-magic
 slowapi
 librosa
 pydub
+websockets
