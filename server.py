@@ -200,6 +200,7 @@ async def transcribe_audio(
         )  # Assuming 'model' can handle file-like objects
         response_data = {"text": result["text"]}
     except Exception as e:
+        logging.error(f"Error processing audio file: {e}")
         raise HTTPException(
             status_code=500, detail=f"Error processing audio file: {e}"
         ) from e
