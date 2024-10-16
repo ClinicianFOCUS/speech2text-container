@@ -281,7 +281,7 @@ async def startup_event():
 
     # Load the Whisper model using the specified model name
     global MODEL
-    MODEL = whisper.load_model("tiny.en")
+    MODEL = whisper.load_model(args["whispermodel"])
 
     # Check and retrieve the API key\
     global SESSION_API_KEY
