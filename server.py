@@ -123,7 +123,7 @@ async def rate_limit_middleware(request, call_next):
 
 # Define the endpoint for transcribing audio files
 @app.post("/whisperaudio")
-@limiter.limit("1/second")
+@limiter.limit("100/second")
 async def transcribe_audio(
     request: Request, file: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):
@@ -174,7 +174,7 @@ async def transcribe_audio(
     file_content = await file.read()  # Assuming 'file' is a File object from an upload
     file_type = mime.from_buffer(file_content)
 
-    if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav", "video/webm"]:
+    if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav", "video/webm", "application/octet-stream"]:
         logging.warning(f"Invalid file type: {file_type}")
         raise HTTPException(
             status_code=400,
@@ -191,6 +191,10 @@ async def transcribe_audio(
             audio.export(wav_buffer, format="wav")
             wav_buffer.seek(0)
             audio_data, sample_rate = librosa.load(wav_buffer, sr=None)
+        elif file_type == "application/octet-stream":
+            # Assume it's raw PCM audio data
+            audio_data = np.frombuffer(file_content, dtype=np.int16).astype(np.float32) / 32768.0
+            sample_rate = 16000
         else:
             audio_data, sample_rate = librosa.load(audio_buffer, sr=None)
 
@@ -220,7 +224,7 @@ async def websocket_endpoint(websocket: WebSocket):
     
     try:
         while True:
-            data = await websocket.receive_text()  # Receive base64 encoded audio data
+            data = await websocket.receive_bytes()  # Receive base64 encoded audio data
             audio_chunk = np.frombuffer(base64.b64decode(data), dtype=np.float32)
             
             buffer.extend(audio_chunk)
