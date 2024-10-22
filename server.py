@@ -115,7 +115,7 @@ async def rate_limit_middleware(request, call_next):
 @app.post("/whisperaudio")
 @limiter.limit("1/second")
 async def transcribe_audio(
-    request: Request, file: UploadFile = File(...), api_key: str = Security(get_api_key)
+    request: Request, audio: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):
     """
     Transcribes an uploaded audio file using the Whisper model.
@@ -161,7 +161,7 @@ async def transcribe_audio(
 
     # Check if the file is an audio file
     mime = magic.Magic(mime=True)
-    file_content = await file.read()  # Assuming 'file' is a File object from an upload
+    file_content = await audio.read()  # Assuming 'file' is a File object from an upload
     file_type = mime.from_buffer(file_content)
 
     if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav"]:
