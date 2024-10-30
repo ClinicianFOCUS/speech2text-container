@@ -16,6 +16,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 import argparse
 import secrets
+from distutils.util import strtobool
+
 
 # Initialize the HTTP Bearer scheme for token authentication
 bearer_scheme = HTTPBearer()
@@ -49,7 +51,7 @@ def parse_arguments():
     use_gpu = os.getenv("USE_GPU", "True")
 
     # Return the parsed configuration as a dictionary
-    return {"host": host, "port": port, "whispermodel": whispermodel, "use_gpu": use_gpu}
+    return {"host": host, "port": port, "whispermodel": whispermodel, "use_gpu": bool(strtobool(use_gpu))}
 
 
 def generate_api_key():

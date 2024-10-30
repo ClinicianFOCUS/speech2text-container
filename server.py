@@ -180,11 +180,11 @@ async def transcribe_audio(
             result = MODEL.transcribe(
                 temp_path,
             )
-            temp_file.close() # close the file so it is deleted
         
         return {"text": result["text"]}
     
     except Exception as e:
+        logging.error(f"Error processing audio file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         if 'temp_path' in locals():
@@ -220,7 +220,7 @@ async def startup_event():
     global MODEL
     device = "cpu"
     
-    if args["use_gpu"] == "True":
+    if args["use_gpu"] is True:
         device = "cuda"
 
     # Check and retrieve the API key\
