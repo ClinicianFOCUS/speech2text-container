@@ -10,6 +10,9 @@ RUN mkdir -p /.cache && chown -R 1000:1000 /.cache
 # Copy the Speech2text server code into the container
 COPY ./requirements.txt .
 
+#Upgrade pip
+RUN python -m pip install --upgrade pip
+
 # Install the required packages
 RUN pip install --no-cache-dir -r requirements.txt
 

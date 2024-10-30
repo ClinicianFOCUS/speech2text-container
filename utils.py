@@ -16,6 +16,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 import argparse
 import secrets
+from distutils.util import strtobool
+
 
 # Initialize the HTTP Bearer scheme for token authentication
 bearer_scheme = HTTPBearer()
@@ -36,6 +38,7 @@ def parse_arguments():
     - ``WHISPER_HOST``: The hostname or IP address on which the application should listen. Default: ``"0.0.0.0"``.
     - ``WHISPER_PORT``: The port number on which the application should listen. Default: ``2224``.
     - ``WHISPER_MODEL``: The name of the Whisper model to be used. Default: ``"medium"``.
+    - ``USE_GPU``: Whether to use the GPU for inference. Default: ``"True"``.
     """
 
     # Define default values from environment variables
@@ -45,9 +48,11 @@ def parse_arguments():
     port = int(os.getenv("WHISPER_PORT", 2224))
     # Retrieve the model name from the environment, defaulting to "medium"
     whispermodel = os.getenv("WHISPER_MODEL", "medium")
+    # Use gpu env
+    use_gpu = os.getenv("USE_GPU", "True")
 
     # Return the parsed configuration as a dictionary
-    return {"host": host, "port": port, "whispermodel": whispermodel}
+    return {"host": host, "port": port, "whispermodel": whispermodel, "use_gpu": bool(strtobool(use_gpu))}
 
 
 def generate_api_key():

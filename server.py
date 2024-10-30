@@ -115,7 +115,7 @@ async def rate_limit_middleware(request, call_next):
 @app.post("/whisperaudio")
 @limiter.limit("1/second")
 async def transcribe_audio(
-    request: Request, file: UploadFile = File(...), api_key: str = Security(get_api_key)
+    request: Request, audio: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):
     """
     Transcribes an uploaded audio file using the Whisper model.
@@ -147,7 +147,7 @@ async def transcribe_audio(
         Authorization: Bearer <api_key>
 
         {
-            "file": <audio_file>
+            "audio": <audio_file>
         }
 
     **Response:**
@@ -159,11 +159,11 @@ async def transcribe_audio(
         }
     """
 
-    # Check if the file is an audio file
+    # Verify file type
     mime = magic.Magic(mime=True)
-    file_content = await file.read()  # Assuming 'file' is a File object from an upload
+    file_content = await audio.read()
     file_type = mime.from_buffer(file_content)
-
+    
     if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav"]:
         logging.warning(f"Invalid file type: {file_type}")
         raise HTTPException(
@@ -172,25 +172,23 @@ async def transcribe_audio(
         )
 
     try:
-        # Use BytesIO to create an in-memory buffer for the audio file
-        audio_buffer = io.BytesIO(file_content)
-
-        audio_data, sample_rate = librosa.load(
-            audio_buffer, sr=None
-        )  # sr=None to keep the original sample rate
-
-        # Process the file with Whisper using the in-memory buffer
-        result = MODEL.transcribe(
-            audio_data
-        )  # Assuming 'model' can handle file-like objects
-        response_data = {"text": result["text"]}
+        # Save to temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(original_filename)[1]) as temp_file:
+            temp_file.write(file_content)
+            temp_path = temp_file.name
+            # Transcribe using temporary file
+            result = MODEL.transcribe(
+                temp_path,
+            )
+        
+        return {"text": result["text"]}
+    
     except Exception as e:
-        logging.error(f"Error processing audio file: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Error processing audio file: {e}"
-        ) from e
-
-    return response_data
+        logging.error(f"Error processing audio file: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+    finally:
+        if 'temp_path' in locals():
+            os.remove(temp_path)
 
 
 # Main entry point for running the Whisper servers
@@ -220,11 +218,13 @@ async def startup_event():
 
     # Load the Whisper model using the specified model name
     global MODEL
-    MODEL = whisper.load_model(args["whispermodel"])
+    device = "cuda" if args["use_gpu"] is True else "cpu"
 
     # Check and retrieve the API key\
     global SESSION_API_KEY
     SESSION_API_KEY = check_api_key()
+
+    MODEL = whisper.load_model(name=args["whispermodel"], device=device)
 
     # Print the API key for reference
     print(

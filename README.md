@@ -38,6 +38,7 @@ The following environment variables can be customized to control the behavior of
 - `WHISPER_PORT`: The port to expose the service (default: `2224`).
 - `WHISPER_HOST`: The host to bind the service (default: `0.0.0.0`).
 - `UVICORN_WORKERS`: Number of Uvicorn workers (default: `1`).
+- `USE_GPU`: Whether to use the GPU for inference. Default: `"True"`.
 
 **Windows Example**
 
