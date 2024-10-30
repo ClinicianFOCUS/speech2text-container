@@ -185,7 +185,7 @@ async def transcribe_audio(
     
     except Exception as e:
         logging.error(f"Error processing audio file: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
     finally:
         if 'temp_path' in locals():
             os.remove(temp_path)
