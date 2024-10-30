@@ -220,7 +220,10 @@ async def startup_event():
 
     # Load the Whisper model using the specified model name
     global MODEL
-    MODEL = whisper.load_model(args["whispermodel"])
+    device = "cpu"
+    
+    if args["use_gpu"] == "True":
+        device = "cuda"
 
     # Check and retrieve the API key\
     global SESSION_API_KEY
@@ -229,3 +232,5 @@ async def startup_event():
     # Print the API key for reference
     print(
         f"Use this API key for requests with bearer header: {SESSION_API_KEY}")
+
+    MODEL = whisper.load_model(args["whispermodel"], device=device)

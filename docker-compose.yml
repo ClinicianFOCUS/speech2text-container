@@ -3,6 +3,17 @@
 services:
   # Service definition for the speech transcription container
   speech-container:
+    # Service for the LLM container
+    deploy:
+      # Resource allocation settings
+      resources:
+        reservations:
+          # Device reservations
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
     # Build configuration for the container
     build:
       context: . # The build context is the current directory
@@ -14,6 +25,7 @@ services:
       - WHISPER_PORT=2224 # Set the PORT environment variable to '2224'
       - WHISPER_HOST=${WHISPER_HOST:-0.0.0.0} # Set the HOST environment variable to '
       - UVICORN_WORKERS=${UVICORN_WORKERS:-1} # Set the UVICORN_WORKERS environment variable to '1'
+      - USE_GPU=${USE_GPU:-True} # Set the USE_GPU environment variable to '1'
     networks:
       - speech-network # Connect the container to the 'speech-network' network
     command: python -m uvicorn server:app --host ${WHISPER_HOST:-0.0.0.0} --port 2224 --workers ${UVICORN_WORKERS:-1} # Command to run when the container starts
