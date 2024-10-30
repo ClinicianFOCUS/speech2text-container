@@ -46,7 +46,7 @@ def parse_arguments():
     # Retrieve the model name from the environment, defaulting to "medium"
     whispermodel = os.getenv("WHISPER_MODEL", "medium")
     # Use gpu env
-    use_gpu = os.getenv("USE_GPU", "False")
+    use_gpu = os.getenv("USE_GPU", "True")
 
     # Return the parsed configuration as a dictionary
     return {"host": host, "port": port, "whispermodel": whispermodel, "use_gpu": use_gpu}
