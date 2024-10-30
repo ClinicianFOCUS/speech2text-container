@@ -173,7 +173,7 @@ async def transcribe_audio(
 
     try:
         # Save to temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(original_filename)[1]) as temp_file:
             temp_file.write(file_content)
             temp_path = temp_file.name
             # Transcribe using temporary file
