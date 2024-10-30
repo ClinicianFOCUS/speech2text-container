@@ -159,38 +159,32 @@ async def transcribe_audio(
         }
     """
 
-    # Check if the file is an audio file
+    # Verify file type
     mime = magic.Magic(mime=True)
-    file_content = await audio.read()  # Assuming 'file' is a File object from an upload
+    file_content = await audio.read()
     file_type = mime.from_buffer(file_content)
-
+    
     if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav"]:
-        logging.warning(f"Invalid file type: {file_type}")
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid file type. Please upload an MP3 or WAV file.",
-        )
+        raise HTTPException(status_code=400, detail="Invalid file type")
 
     try:
-        # Use BytesIO to create an in-memory buffer for the audio file
-        audio_buffer = io.BytesIO(file_content)
-
-        audio_data, sample_rate = librosa.load(
-            audio_buffer, sr=None
-        )  # sr=None to keep the original sample rate
-
-        # Process the file with Whisper using the in-memory buffer
-        result = MODEL.transcribe(
-            audio_data
-        )  # Assuming 'model' can handle file-like objects
-        response_data = {"text": result["text"]}
+        # Save to temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
+            temp_file.write(file_content)
+            temp_path = temp_file.name
+            # Transcribe using temporary file
+            result = MODEL.transcribe(
+                temp_path,
+            )
+            temp_file.close() # close the file so it is deleted
+        
+        return {"text": result["text"]}
+    
     except Exception as e:
-        logging.error(f"Error processing audio file: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Error processing audio file: {e}"
-        ) from e
-
-    return response_data
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if 'temp_path' in locals():
+            os.remove(temp_path)
 
 
 # Main entry point for running the Whisper servers
@@ -229,8 +223,8 @@ async def startup_event():
     global SESSION_API_KEY
     SESSION_API_KEY = check_api_key()
 
+    MODEL = whisper.load_model(name=args["whispermodel"], device=device)
+
     # Print the API key for reference
     print(
         f"Use this API key for requests with bearer header: {SESSION_API_KEY}")
-
-    MODEL = whisper.load_model(args["whispermodel"], device=device)
