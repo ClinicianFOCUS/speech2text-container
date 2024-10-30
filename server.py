@@ -165,7 +165,11 @@ async def transcribe_audio(
     file_type = mime.from_buffer(file_content)
     
     if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav"]:
-        raise HTTPException(status_code=400, detail="Invalid file type")
+        logging.warning(f"Invalid file type: {file_type}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file type. Please upload an MP3 or WAV file.",
+        )
 
     try:
         # Save to temporary file
