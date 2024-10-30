@@ -38,6 +38,7 @@ def parse_arguments():
     - ``WHISPER_HOST``: The hostname or IP address on which the application should listen. Default: ``"0.0.0.0"``.
     - ``WHISPER_PORT``: The port number on which the application should listen. Default: ``2224``.
     - ``WHISPER_MODEL``: The name of the Whisper model to be used. Default: ``"medium"``.
+    - ``USE_GPU``: Whether to use the GPU for inference. Default: ``"True"``.
     """
 
     # Define default values from environment variables
