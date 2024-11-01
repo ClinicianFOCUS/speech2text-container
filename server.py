@@ -20,6 +20,7 @@ from slowapi.errors import RateLimitExceeded
 from fastapi.responses import PlainTextResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
+from pydub import AudioSegment
 import whisper
 import uvicorn
 import os
@@ -164,22 +165,32 @@ async def transcribe_audio(
     file_content = await audio.read()
     file_type = mime.from_buffer(file_content)
     
-    if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav"]:
+    if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav", "video/webm"]:
         logging.warning(f"Invalid file type: {file_type}")
         raise HTTPException(
             status_code=400,
-            detail="Invalid file type. Please upload an MP3 or WAV file.",
+            detail="Invalid file type. Please upload an MP3, WAV, or WEBM file.",
         )
 
     try:
-        # Save to temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(original_filename)[1]) as temp_file:
-            temp_file.write(file_content)
-            temp_path = temp_file.name
-            # Transcribe using temporary file
-            result = MODEL.transcribe(
-                temp_path,
-            )
+
+        if file_type == "video/webm":
+            # Convert WebM to WAV
+            audio = AudioSegment.from_file(io.BytesIO(file_content), format="webm")
+            # Create a temporary file to save the converted audio
+            wav_temp_path = tempfile.mktemp(suffix=".wav")
+            audio.export(wav_temp_path, format="wav")
+            temp_path = wav_temp_path  # Update temp_path to the new WAV file path
+        else:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(audio.filename)[1]) as temp_file:
+                temp_file.write(file_content)
+                temp_path = temp_file.name
+                
+
+        # Transcribe using temporary file
+        result = MODEL.transcribe(
+            temp_path,
+        )
         
         return {"text": result["text"]}
     
