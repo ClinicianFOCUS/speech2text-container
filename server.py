@@ -111,6 +111,15 @@ async def rate_limit_middleware(request, call_next):
             "Rate limit exceeded. Try again later.", status_code=429
         )
 
+# Processing files to aud format and reutrning its data with temp file  name
+def normalize_audio(file_content: bytes, file_type: str) -> tuple[bytes, str]:
+    if file_type == "video/webm":
+        audio = AudioSegment.from_file(io.BytesIO(file_content), format="webm")
+        buffer = io.BytesIO()
+        audio.export(buffer, format="wav")
+        return buffer.getvalue(), ".wav"
+    return file_content, os.path.splitext(audio.filename)[1]
+
 
 # Define the endpoint for transcribing audio files
 @app.post("/whisperaudio")
@@ -173,24 +182,15 @@ async def transcribe_audio(
         )
 
     try:
-
-        if file_type == "video/webm":
-            # Convert WebM to WAV
-            audio = AudioSegment.from_file(io.BytesIO(file_content), format="webm")
-            # Create a temporary file to save the converted audio
-            wav_temp_path = tempfile.mktemp(suffix=".wav")
-            audio.export(wav_temp_path, format="wav")
-            temp_path = wav_temp_path  # Update temp_path to the new WAV file path
-        else:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(audio.filename)[1]) as temp_file:
-                temp_file.write(file_content)
-                temp_path = temp_file.name
-                
-
-        # Transcribe using temporary file
-        result = MODEL.transcribe(
-            temp_path,
-        )
+        normalized_content, suffix = normalize_audio(file_content, file_type)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+            temp_file.write(normalized_content)
+            temp_file.write(file_content)
+            temp_path = temp_file.name
+                # Transcribe using temporary file
+            result = MODEL.transcribe(
+                temp_path,
+            )
         
         return {"text": result["text"]}
     
