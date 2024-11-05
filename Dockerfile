@@ -16,6 +16,9 @@ RUN python -m pip install --upgrade pip
 # Install the required packages
 RUN pip install --no-cache-dir -r requirements.txt
 
+#Pip Install the required packages for the GPU
+RUN torch --index-url https://download.pytorch.org/whl/cu121
+
 # Install the required packages for python magic
 RUN apt-get update && apt-get install -y \
     libmagic1 \
@@ -32,4 +35,3 @@ COPY ./.env ./.env
 
 # Expose the port the app runs on
 EXPOSE 2224
-        
