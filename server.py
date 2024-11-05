@@ -118,7 +118,18 @@ def normalize_audio(file_content: bytes, file_type: str) -> tuple[bytes, str]:
         buffer = io.BytesIO()
         audio.export(buffer, format="wav")
         return buffer.getvalue(), ".wav"
-    return file_content, os.path.splitext(audio.filename)[1]
+    
+    # Mapping of MIME types to file extensions
+    mime_to_extension = {
+        "audio/mpeg": ".mp3",
+        "audio/wav": ".wav",
+        "audio/x-wav": ".wav",
+        # Add more mappings if needed
+    }
+    
+    # Get the correct extension based on the file type
+    extension = mime_to_extension.get(file_type, "")  # Default to empty string if not found
+    return file_content, extension
 
 
 # Define the endpoint for transcribing audio files
