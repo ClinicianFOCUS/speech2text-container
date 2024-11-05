@@ -1,0 +1,41 @@
+# Docker Compose configuration file for setting up a speech transcription service
+
+services:
+  # Service definition for the speech transcription container
+  speech-container:
+    # Build configuration for the container
+    build:
+      context: . # The build context is the current directory
+      dockerfile: Dockerfile.cpu # The Dockerfile to use for building the image
+    container_name: speech-container # Name of the container
+    user: "1000:1000" # Set the user to '1000:1000'
+    environment:
+      - WHISPER_MODEL=${WHISPER_MODEL:-medium} # Set the WHISPER_MODEL environment variable to 'tiny'
+      - WHISPER_PORT=2224 # Set the PORT environment variable to '2224'
+      - WHISPER_HOST=${WHISPER_HOST:-0.0.0.0} # Set the HOST environment variable to '
+      - UVICORN_WORKERS=${UVICORN_WORKERS:-1} # Set the UVICORN_WORKERS environment variable to '1'
+      - USE_GPU=False # Set the USE_GPU environment variable to '1'
+    networks:
+      - speech-network # Connect the container to the 'speech-network' network
+    command: python -m uvicorn server:app --host ${WHISPER_HOST:-0.0.0.0} --port 2224 --workers ${UVICORN_WORKERS:-1} # Command to run when the container starts
+    restart: on-failure # Restart policy on failure
+
+  # Service definition for the Caddy reverse proxy
+  caddy:
+    container_name: caddy # Name of the container
+    user: "1000:1000" # Set the user to '1000:1000'
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    ports:
+      - ${WHISPER_PORT:-2224}:2224 # Map port the provided port to the whisper container
+    networks:
+      - speech-network # Connect the container to the 'speech-network' network
+    depends_on:
+      - speech-container # Ensure the 'speech-container' service starts before this one
+    restart: on-failure # Restart policy on failure
+
+# Network configuration
+networks:
+  speech-network:
+    driver: bridge # Use the bridge network driver
