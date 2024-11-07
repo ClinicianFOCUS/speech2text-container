@@ -1,84 +1,98 @@
-# speech2text-container
+# FreeScribe Speech-to-Text Server
 
-Containerized solution for AI speech-to-text that can run locally
+This software is released under the AGPL-3.0 license  
+Copyright (c) 2023-2024 Braedon Hendy
 
-# Prerequisites
+Part of the ClinicianFOCUS initiative, a collaboration with Conestoga College Institute of Applied Learning and Technology's CNERG+ applied research project.
 
-Docker and Docker-compose installed on your system.
+## Overview
 
-# Build and run
+FreeScribe is an open-source speech-to-text server that utilizes OpenAI's Whisper model for audio transcription. It provides a robust API endpoint for converting audio files to text, with support for various audio formats including MP3, WAV, and WebM.
 
-1. Install
+## Features
+
+- Fast audio transcription using Whisper AI
+- Support for multiple audio formats (MP3, WAV, WebM)
+- Rate limiting protection
+- API key authentication
+- GPU support for faster processing
+- Docker containerization
+- Reverse proxy setup with Caddy
+
+## Prerequisites
+
+- Docker and Docker Compose
+- NVIDIA GPU (optional, for GPU acceleration)
+- NVIDIA Container Toolkit (if using GPU)
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file with the following variables:
+
+```env
+WHISPER_MODEL=medium    # Whisper model size (tiny, base, small, medium, large) (Default: medium)
+WHISPER_PORT=2224      # Port for the service (Default: 2224)
+WHISPER_HOST=0.0.0.0   # Host address (Default: 0.0.0.0)
+UVICORN_WORKERS=1      # Number of Uvicorn workers (Default: 1)
+```
+
+## Deployment Options
+
+### CPU-Only Deployment
 
 ```bash
-git clone https://github.com/ClinicianFOCUS/speech2text-container.git
+docker-compose -f docker-compose.cpu.yml up --build
 ```
 
-2. Navigate into the directory
+### GPU-Enabled Deployment
 
 ```bash
-cd speech2text-container
+docker-compose up --build
 ```
 
-- **Recommended Step:** Set a API key in the .env file. this will be the key used to access the API. If this step is skipped the container wil generate a random key for you upon each start.
+## Container Structure
 
-3. Build and run the docker images using docker-compose
+The application consists of two main containers:
 
-```bash
-docker-compose up -d --build
-```
+1. **speech-container**
 
-# Usage
+   - Runs the FastAPI application
+   - Handles audio transcription
+   - Configurable for CPU or GPU usage
 
-Send a Request: Send audio data to the exposed endpoint on http://localhost:2224/whisperaudio
+2. **caddy**
+   - Reverse proxy
+   - Handles HTTPS termination
+   - Manages incoming traffic
 
-The following environment variables can be customized to control the behavior of the `speech-container` service:
+## API Usage
 
-- `WHISPER_MODEL`: The Whisper model to use (default: `medium`).
-- `WHISPER_PORT`: The port to expose the service (default: `2224`).
-- `WHISPER_HOST`: The host to bind the service (default: `0.0.0.0`).
-- `UVICORN_WORKERS`: Number of Uvicorn workers (default: `1`).
-- `USE_GPU`: Whether to use the GPU for inference. Default: `"True"`.
+### Endpoint: POST /whisperaudio
 
-**Windows Example**
+Transcribe an audio file to text.
 
-```Bash
-$env:WHISPER_MODEL="large"; $env:WHISPER_PORT="2224"; $env:WHISPER_HOST="127.0.0.1"; docker-compose up -d --build
-```
+**Request:**
 
-**Linux Example**:
+- Method: POST
+- Content-Type: multipart/form-data
+- Authorization: Bearer <api_key>
+- Body: audio file (MP3, WAV, or WebM)
 
-NOTE: Not tested in a linux environment
-
-```bash
-WHISPER_MODEL=large WHISPER_PORT=2224 WHISPER_HOST=127.0.0.1 docker-compose up -d --build
-
-```
-
-This will start the transcription service with the `large` Whisper model on port `2224`, accessible only from `127.0.0.1`.
-
-# Authentication
-
-On server start up you will receive a api key in the console. This key changes on each start up of the software.
-
-You can set your own API key in the .env. This will be your authentication key when launched in the container.
-
-# Example request
-
-```bash
-   curl -X POST "http://localhost:2224/whisperaudio" \
-        -H "Authorization: Bearer <api_key>" \
-        -F "file=@/path/to/audiofile.wav"
-```
-
-# Example response
+**Response:**
 
 ```json
 {
-  "text": "Transcribed text here"
+  "text": "Transcribed text from the audio file."
 }
 ```
 
-# License
+## Rate Limiting
 
-This project is licensed under the AGPL-3.0 License. See the LICENSE file for details.
+- Default rate limit: 1 request per second
+- Rate limit errors return 429 status code
+
+## License
+
+This project is licensed under the AGPL-3.0 License - see the LICENSE file for details.
