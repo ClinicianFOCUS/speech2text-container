@@ -17,7 +17,7 @@ RUN python -m pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 #Pip Install the required packages for the GPU
-RUN torch --index-url https://download.pytorch.org/whl/cu121
+RUN pip install torch --index-url https://download.pytorch.org/whl/cu121
 
 # Install the required packages for python magic
 RUN apt-get update && apt-get install -y \
