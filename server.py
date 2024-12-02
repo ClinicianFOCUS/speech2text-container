@@ -248,6 +248,14 @@ async def startup_event():
 
     MODEL = whisper.load_model(name=args["whispermodel"], device=device)
 
-    # Print the API key for reference
-    print(
-        f"Use this API key for requests with bearer header: {SESSION_API_KEY}")
+    # Print API key information and security warnings
+    print("\n" + "="*50)
+    print(" " * 5 + "⚠️ IMPORTANT: API Key Information ⚠️" + " " * 5)
+    print("="*50)
+    print("\n" + " " * 3 + f" Session API Key: {SESSION_API_KEY} " + "\n")
+    print("="*50)
+    print("\nNOTE:")
+    print("- Do not share your API key publicly.")
+    print("- Avoid committing API keys in code repositories.")
+    print("- If exposed, reset and replace it immediately.\n")
+    print("="*50 + "\n")

@@ -21,6 +21,7 @@ services:
     container_name: speech-container # Name of the container
     user: "1000:1000" # Set the user to '1000:1000'
     environment:
+      - PYTHONUNBUFFERED=1 # Enable unbuffered Python output
       - WHISPER_MODEL=${WHISPER_MODEL:-medium} # Set the WHISPER_MODEL environment variable to 'tiny'
       - WHISPER_PORT=2224 # Set the PORT environment variable to '2224'
       - WHISPER_HOST=${WHISPER_HOST:-0.0.0.0} # Set the HOST environment variable to '
