@@ -31,7 +31,6 @@ RUN apt-get install ffmpeg -y
 # copy the rest of the directory into the container
 COPY ./server.py .
 COPY ./utils.py .
-COPY ./.env ./.env
 
 # Expose the port the app runs on
 EXPOSE 2224
