@@ -1,6 +1,9 @@
 # Use the official Python image
 FROM python:3.10-slim
 
+# Create a group with GID 1000 and a user with UID 1000
+RUN addgroup --gid 1000 appgroup && adduser --uid 1000 --gid 1000 --disabled-password --gecos "" appuser
+
 # Set the working directory
 WORKDIR /app
 
