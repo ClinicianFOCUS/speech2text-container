@@ -134,7 +134,7 @@ def normalize_audio(file_content: bytes, file_type: str) -> tuple[bytes, str]:
 
 # Define the endpoint for transcribing audio files
 @app.post("/whisperaudio")
-@limiter.limit("1/second")
+@limiter.limit("10/second")
 async def transcribe_audio(
     request: Request, audio: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):

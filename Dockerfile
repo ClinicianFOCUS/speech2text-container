@@ -1,6 +1,9 @@
 # Use the official Python image
 FROM python:3.10-slim
 
+# Create a group with GID 1000 and a user with UID 1000
+RUN addgroup --gid 1000 appgroup && adduser --uid 1000 --gid 1000 --disabled-password --gecos "" appuser
+
 # Set the working directory
 WORKDIR /app
 
@@ -31,7 +34,6 @@ RUN apt-get install ffmpeg -y
 # copy the rest of the directory into the container
 COPY ./server.py .
 COPY ./utils.py .
-COPY ./.env ./.env
 
 # Expose the port the app runs on
 EXPOSE 2224
