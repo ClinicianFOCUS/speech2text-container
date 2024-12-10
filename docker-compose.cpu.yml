@@ -7,6 +7,7 @@ services:
     build:
       context: . # The build context is the current directory
       dockerfile: Dockerfile.cpu # The Dockerfile to use for building the image
+      no_cache: true # Disable caching during the build process
     container_name: speech-container # Name of the container
     user: "appuser:appgroup" # Set the user to '1000:1000'
     environment:
@@ -29,6 +30,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.caddy
+      no_cache: true # Disable caching during the build process
     ports:
       - ${WHISPER_PORT:-2224}:2224 # Map port the provided port to the whisper container
     networks:
