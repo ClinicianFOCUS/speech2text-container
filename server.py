@@ -17,7 +17,7 @@ from utils import check_api_key, get_api_key, parse_arguments, get_ip_from_heade
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 from pydub import AudioSegment
@@ -131,6 +131,19 @@ def normalize_audio(file_content: bytes, file_type: str) -> tuple[bytes, str]:
     extension = mime_to_extension.get(file_type, "")  # Default to empty string if not found
     return file_content, extension
 
+
+@app.get("/health")
+@limiter.limit("1/second")
+async def health_check(request: Request):
+    """
+    Health check endpoint to verify the service is running.
+
+    Returns:
+        JSONResponse: A simple JSON response indicating the service is running
+    """
+    return JSONResponse(
+        content={"status": "ok"}
+    )
 
 # Define the endpoint for transcribing audio files
 @app.post("/whisperaudio")
