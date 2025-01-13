@@ -21,7 +21,7 @@ from fastapi.responses import PlainTextResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 from pydub import AudioSegment
-import whisper
+from faster_whisper import WhisperModel
 import uvicorn
 import os
 import tempfile
@@ -199,11 +199,11 @@ async def transcribe_audio(
             temp_file.write(file_content)
             temp_path = temp_file.name
                 # Transcribe using temporary file
-            result = MODEL.transcribe(
+            result = faster_whisper_transcribe(
                 temp_path,
             )
         
-        return {"text": result["text"]}
+        return {"text": result}
     
     except Exception as e:
         logging.error(f"Error processing audio file: {str(e)}")
@@ -235,18 +235,11 @@ async def startup_event():
     - None
     """
 
-    # Parse command-line arguments
-    args = parse_arguments()
-
-    # Load the Whisper model using the specified model name
-    global MODEL
-    device = "cuda" if args["use_gpu"] is True else "cpu"
-
     # Check and retrieve the API key\
     global SESSION_API_KEY
     SESSION_API_KEY = check_api_key()
 
-    MODEL = whisper.load_model(name=args["whispermodel"], device=device)
+    _load_stt_model()
 
     # Print API key information and security warnings
     print("\n" + "="*50)
@@ -259,3 +252,60 @@ async def startup_event():
     print("- Avoid committing API keys in code repositories.")
     print("- If exposed, reset and replace it immediately.\n")
     print("="*50 + "\n")
+
+def _load_stt_model():
+    """
+    Internal function to load the Whisper speech-to-text model.
+    
+    Creates a loading window and handles the initialization of the WhisperModel
+    with configured settings. Updates the global stt_local_model variable.
+    
+    Raises:
+        Exception: Any error that occurs during model loading is caught, logged,
+                  and displayed to the user via a message box.
+    """
+    # Parse command-line arguments
+    args = parse_arguments()
+
+    # Load the Whisper model using the specified model name
+    global MODEL
+    device = "cuda" if args["use_gpu"] is True else "cpu"
+    model_name = args["whispermodel"]
+
+    print(f"Loading STT model: {model_name}")
+    try:       
+        MODEL = WhisperModel(
+            model_name, 
+            device=device)
+
+        print("STT model loaded successfully.")
+    except Exception as e:
+        print(f"An error occurred while loading STT {type(e).__name__}: {e}")
+        MODEL = None
+
+def faster_whisper_transcribe(audio):
+    """
+    Transcribe audio using the Faster Whisper model.
+    
+    Args:
+        audio: Audio data to transcribe.
+    
+    Returns:
+        str: Transcribed text or error message if transcription fails.
+        
+    Raises:
+        Exception: Any error during transcription is caught and returned as an error message.
+    """
+    try:
+        if MODEL is None:
+            _load_stt_model()
+            print("Speech2Text model not loaded. Please try again once loaded.")
+
+        segments, info = MODEL.transcribe(
+            audio,
+        )
+
+        return "".join(f"{segment.text} " for segment in segments)
+    except Exception as e:
+        error_message = f"Transcription failed: {str(e)}"
+        print(f"Error during transcription: {str(e)}")

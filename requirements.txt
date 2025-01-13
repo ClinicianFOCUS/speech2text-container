@@ -1,5 +1,4 @@
-openai-whisper
-fastapi
+faster-whisper
 uvicorn
 pydantic
 python-multipart
