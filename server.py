@@ -309,3 +309,4 @@ def faster_whisper_transcribe(audio):
     except Exception as e:
         error_message = f"Transcription failed: {str(e)}"
         print(f"Error during transcription: {str(e)}")
+        return error_message
