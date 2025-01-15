@@ -1,4 +1,5 @@
 faster-whisper
+fastapi
 uvicorn
 pydantic
 python-multipart
