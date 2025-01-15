@@ -4,6 +4,18 @@ FROM python:3.10-slim
 # Create a group with GID 1000 and a user with UID 1000
 RUN addgroup --gid 1000 appgroup && adduser --uid 1000 --gid 1000 --disabled-password --gecos "" appuser
 
+# Update the system and install necessary tools
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb \
+    && dpkg -i cuda-keyring_1.1-1_all.deb \
+    && apt-get update \
+    && apt-get -y install cudnn-cuda-12
+
 # Set the working directory
 WORKDIR /app
 
