@@ -50,9 +50,11 @@ def parse_arguments():
     whispermodel = os.getenv("WHISPER_MODEL", "medium")
     # Use gpu env
     use_gpu = os.getenv("USE_GPU", "True")
+    # Debug mode
+    debug = os.getenv("DEBUG_MODE", "False")
 
     # Return the parsed configuration as a dictionary
-    return {"host": host, "port": port, "whispermodel": whispermodel, "use_gpu": bool(strtobool(use_gpu))}
+    return {"host": host, "port": port, "whispermodel": whispermodel, "use_gpu": bool(strtobool(use_gpu)), "debug": bool(strtobool(debug))}
 
 
 def generate_api_key():
