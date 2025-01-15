@@ -225,7 +225,7 @@ async def transcribe_audio(
         result = faster_whisper_transcribe(temp_path)
 
         if USE_DEBUG:
-            print(f"Transcription finished. Results returned to request address.")
+            print("Transcription finished. Results returned to request address.")
 
         return {"text": result}
 
