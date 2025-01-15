@@ -36,6 +36,7 @@ WHISPER_MODEL=medium    # Whisper model size (tiny, base, small, medium, large) 
 WHISPER_PORT=2224      # Port for the service (Default: 2224)
 WHISPER_HOST=0.0.0.0   # Host address (Default: 0.0.0.0)
 UVICORN_WORKERS=1      # Number of Uvicorn workers (Default: 1)
+DEBUG_MODE=False       # Debug mode toggle switch. Set to true to enable debug mode. (Default: False)
 ```
 
 ## Deployment Options
