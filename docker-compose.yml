@@ -29,7 +29,7 @@ services:
       - UVICORN_WORKERS=${UVICORN_WORKERS:-1} # Set the UVICORN_WORKERS environment variable to '1'
       - USE_GPU=True # Set the USE_GPU environment variable to '1'
       - SESSION_API_KEY=${SESSION_API_KEY:-} # Optional API key for authentication
-      - DEBUG_MODE=${DEBUG_MODE:-False} # Set the DEBUG_MODE environment variable to 'False'
+      - DEBUG_MODE=${DEBUG_MODE:-True} # Set the DEBUG_MODE environment variable to 'False'
     networks:
       - speech-network # Connect the container to the 'speech-network' network
     command: python -m uvicorn server:app --host ${WHISPER_HOST:-0.0.0.0} --port 2224 --workers ${UVICORN_WORKERS:-1} # Command to run when the container starts
