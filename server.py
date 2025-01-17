@@ -10,7 +10,6 @@ Prof. Michael Yingbull (PI), Dr. Braedon Hendy (Partner),
 and Research Students - Software Developer Alex Simko, Pemba Sherpa (F24), and Naitik Patel.
 """
 
-from torch._C import NoneType
 from fastapi import FastAPI, File, UploadFile, HTTPException, Security, Request
 from dotenv import load_dotenv
 from utils import check_api_key, get_api_key, parse_arguments, get_ip_from_headers
