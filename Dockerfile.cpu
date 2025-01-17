@@ -19,6 +19,9 @@ RUN python -m pip install --upgrade pip
 # Install the required packages
 RUN pip install --no-cache-dir -r requirements.txt
 
+#Install cpu torch for faster whisper
+RUN pip install torch
+
 # Install the required packages for python magic
 RUN apt-get update && apt-get install -y \
     libmagic1 \
