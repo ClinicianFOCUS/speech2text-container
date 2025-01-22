@@ -69,6 +69,18 @@ The application consists of two main containers:
 
 ## API Usage
 
+### Endpoint: POST /health
+
+API to check if container is running.
+
+**Response:**
+
+```json
+{
+  "status": "ok"
+}
+```
+
 ### Endpoint: POST /whisperaudio
 
 Transcribe an audio file to text.
