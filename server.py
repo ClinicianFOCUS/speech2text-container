@@ -208,20 +208,17 @@ async def transcribe_audio(
 
     try:
         normalized_content, suffix = normalize_audio(file_content, file_type)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-            temp_file.write(normalized_content)
-            temp_file.write(file_content)
-            temp_path = temp_file.name
+        audio_buffer = io.BytesIO(normalized_content)
+        audio_buffer.seek(0) # Reset the buffer position to the start
 
         if USE_DEBUG:
-            print(f"Temporary file created at: {temp_path}")
             # print file information 
             print(f"File name: {audio.filename}")
             print(f"File type: {file_type}")
             print(f"File size: {len(file_content)} bytes")
 
         # Transcribe using temporary file
-        result = faster_whisper_transcribe(temp_path)
+        result = faster_whisper_transcribe(audio_buffer)
 
         if USE_DEBUG:
             print("Transcription finished. Results returned to request address.")
@@ -235,10 +232,7 @@ async def transcribe_audio(
         raise HTTPException(status_code=500, detail=str(e)) from e
 
     finally:
-        if 'temp_path' in locals():
-            os.remove(temp_path)
-            if USE_DEBUG:
-                print(f"Temporary file {temp_path} deleted.")
+        audio_buffer.close()
 
 
 
