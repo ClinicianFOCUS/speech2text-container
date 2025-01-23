@@ -232,7 +232,8 @@ async def transcribe_audio(
         raise HTTPException(status_code=500, detail=str(e)) from e
 
     finally:
-        audio_buffer.close()
+        if 'audio_buffer' in locals():
+            audio_buffer.close()
 
 
 
