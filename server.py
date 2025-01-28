@@ -207,15 +207,28 @@ async def transcribe_audio(
     # If you need to see the form data
     request_data = dict(await request.form())  # Convert the form data to a dictionary
 
-    # setup variables from the request
-    
-    try: # try parsing the bool if fails set to false
-        use_translate_task = bool(int(request_data.get("use_translate", '0')))
-    except ValueError:
-        use_translate_task = False
+    # Setup variables from the request
+    use_translate_value = request_data.get("use_translate", False)
+    try:
+        # Normalize the input and convert to boolean
+        if isinstance(use_translate_value, str):
+            use_translate_value = use_translate_value.strip().lower()  # Normalize case and trim whitespace
+            if use_translate_value in ("1", "true", "True"):
+                use_translate_task = True
+            elif use_translate_value in ("0", "false", "False"):
+                use_translate_task = False
+            else:
+                use_translate_task = False  # Default to False for invalid inputs
+        else:
+            # Directly handle non-string inputs
+            use_translate_task = bool(use_translate_value)
 
-    whisper_task = "translate" if use_translate_task else "transcribe"
-    whisper_lang = request_data.get("language_code", None)
+        whisper_task = "translate" if use_translate_task else "transcribe"
+    except Exception as e:
+        logging.error(f"Error processing request data: {str(e)}")
+        whisper_task = "transcribe"
+
+        whisper_lang = request_data.get("language_code", None)
 
     # Verify file type
     mime = magic.Magic(mime=True)
