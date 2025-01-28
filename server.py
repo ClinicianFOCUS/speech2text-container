@@ -224,6 +224,7 @@ async def transcribe_audio(
             use_translate_task = bool(use_translate_value)
 
         whisper_task = "translate" if use_translate_task else "transcribe"
+        whisper_lang = request_data.get("language_code", None)
     except Exception as e:
         logging.error(f"Error processing request data: {str(e)}")
         whisper_task = "transcribe"
