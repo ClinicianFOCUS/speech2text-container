@@ -204,6 +204,30 @@ async def transcribe_audio(
         print(f"Transcription request received and started for {audio.filename}.")
         print("Starting file verification...")
 
+    # Setup variables from the request
+    try:
+        use_translate_value = (await request.form()).get("use_translate", '0')
+        whisper_lang = (await request.form()).get("language_code", None)
+        
+        # Normalize the input and convert to boolean
+        if isinstance(use_translate_value, str):
+            use_translate_value = use_translate_value.strip().lower()  # Normalize case and trim whitespace
+            if use_translate_value in ("1", "true"):
+                use_translate_task = True
+            elif use_translate_value in ("0", "false"):
+                use_translate_task = False
+            else:
+                use_translate_task = False  # Default to False for invalid inputs
+        else:
+            # Directly handle non-string inputs
+            use_translate_task = bool(use_translate_value)
+
+        whisper_task = "translate" if use_translate_task else "transcribe"
+    except Exception as e:
+        logging.error(f"Error processing request data: {str(e)}")
+        whisper_task = "transcribe"
+        whisper_lang = (await request.form).get("language_code", None)
+
     # Verify file type
     mime = magic.Magic(mime=True)
     file_content = await audio.read()
@@ -231,7 +255,11 @@ async def transcribe_audio(
             print(f"File size: {len(file_content)} bytes")
 
         # Transcribe using temporary file
-        result = faster_whisper_transcribe(audio_buffer)
+        if USE_DEBUG:
+            print("Whipser Task: ", whisper_task)
+            print("Whisper Lang: ", whisper_lang)
+            
+        result = faster_whisper_transcribe(audio_buffer, task=whisper_task, language=whisper_lang)
 
         if USE_DEBUG:
             print("Transcription finished. Results returned to request address.")
@@ -239,11 +267,10 @@ async def transcribe_audio(
         return {"text": result}
 
     except Exception as e:
-        logging.error(f"Error processing audio file: {str(e)}")
+        logging.error(f"Error processing audio file ({type(e).__name__}): {str(e)}")
         if USE_DEBUG:
             print(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) from e
-
     finally:
         if 'audio_buffer' in locals():
             audio_buffer.close()
@@ -328,7 +355,7 @@ def _load_stt_model():
         print(f"An error occurred while loading STT {type(e).__name__}: {e}")
         MODEL = None
 
-def faster_whisper_transcribe(audio):
+def faster_whisper_transcribe(audio, **kwargs):
     """
     Transcribe audio using the Faster Whisper model.
     
@@ -349,6 +376,7 @@ def faster_whisper_transcribe(audio):
 
         segments, info = MODEL.transcribe(
             audio,
+            **kwargs
         )
 
         return "".join(f"{segment.text} " for segment in segments)
