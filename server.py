@@ -205,8 +205,10 @@ async def transcribe_audio(
         print("Starting file verification...")
 
     # Setup variables from the request
-    use_translate_value = (await request.form).get("use_translate", '0')
     try:
+        use_translate_value = (await request.form).get("use_translate", '0')
+        whisper_lang = (await request.form).get("language_code", None)
+        
         # Normalize the input and convert to boolean
         if isinstance(use_translate_value, str):
             use_translate_value = use_translate_value.strip().lower()  # Normalize case and trim whitespace
@@ -221,7 +223,6 @@ async def transcribe_audio(
             use_translate_task = bool(use_translate_value)
 
         whisper_task = "translate" if use_translate_task else "transcribe"
-        whisper_lang = (await request.form).get("language_code", None)
     except Exception as e:
         logging.error(f"Error processing request data: {str(e)}")
         whisper_task = "transcribe"
