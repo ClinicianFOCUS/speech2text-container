@@ -206,8 +206,8 @@ async def transcribe_audio(
 
     # Setup variables from the request
     try:
-        use_translate_value = (await request.form).get("use_translate", '0')
-        whisper_lang = (await request.form).get("language_code", None)
+        use_translate_value = (await request.form()).get("use_translate", '0')
+        whisper_lang = (await request.form()).get("language_code", None)
         
         # Normalize the input and convert to boolean
         if isinstance(use_translate_value, str):
