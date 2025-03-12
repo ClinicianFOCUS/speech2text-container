@@ -376,6 +376,8 @@ def faster_whisper_transcribe(audio, **kwargs):
 
         segments, info = MODEL.transcribe(
             audio,
+            beam_size=5,
+            vad_filter = True,
             **kwargs
         )
 
