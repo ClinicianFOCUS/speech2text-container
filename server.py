@@ -132,11 +132,13 @@ def normalize_audio(file_content: bytes, file_type: str) -> tuple[bytes, str]:
         "audio/mpeg": ".mp3",
         "audio/wav": ".wav",
         "audio/x-wav": ".wav",
+        "audio/mp4": ".m4a",
         # Add more mappings if needed
     }
     
     # Get the correct extension based on the file type
     extension = mime_to_extension.get(file_type, "")  # Default to empty string if not found
+    
     return file_content, extension
 
 
@@ -211,12 +213,12 @@ async def transcribe_audio(
 
     if USE_DEBUG:
         print(f"Detected file type: {file_type}")
-
-    if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav", "video/webm"]:
+    # "Voice Memo" of iOS devices are saved as audio/x-m4a, and recommended MIME type for M4A files is audio/mp4
+    if file_type not in ["audio/mpeg", "audio/wav", "audio/x-wav", "video/webm", "audio/mp4", "audio/x-m4a"]:
         logging.warning(f"Invalid file type: {file_type}")
         raise HTTPException(
             status_code=400,
-            detail="Invalid file type. Please upload an MP3, WAV, or WEBM file.",
+            detail="Invalid file type. Please upload an MP3, WAV, M4A or WEBM file.",
         )
 
     try:
