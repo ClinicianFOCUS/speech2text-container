@@ -211,6 +211,7 @@ async def transcribe_audio(
     try:
         use_translate_value = (await request.form()).get("use_translate", '0')
         whisper_lang = (await request.form()).get("language_code", None)
+        initial_prompt = (await request.form()).get("initial_prompt", None)
         
         # Normalize the input and convert to boolean
         if isinstance(use_translate_value, str):
@@ -230,6 +231,7 @@ async def transcribe_audio(
         logging.error(f"Error processing request data: {str(e)}")
         whisper_task = "transcribe"
         whisper_lang = (await request.form).get("language_code", None)
+        initial_prompt = (await request.form).get("initial_prompt", None)
 
     # Verify file type
     mime = magic.Magic(mime=True)
@@ -261,8 +263,9 @@ async def transcribe_audio(
         if USE_DEBUG:
             print("Whipser Task: ", whisper_task)
             print("Whisper Lang: ", whisper_lang)
+            print("Initial Prompt: ", initial_prompt)
             
-        result = faster_whisper_transcribe(audio_buffer, task=whisper_task, language=whisper_lang)
+        result = faster_whisper_transcribe(audio_buffer, task=whisper_task, language=whisper_lang, initial_prompt=initial_prompt)
 
         if USE_DEBUG:
             print("Transcription finished. Results returned to request address.")
